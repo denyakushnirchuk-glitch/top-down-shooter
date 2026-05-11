@@ -161,8 +161,6 @@ function Game:draw()
 
     Camera:detach()
 
-    self.hud:draw(self.player, self._killCount)
-
     love.graphics.setCanvas()
 
     -- ── Blit canvas through the screen shader ─────────────────────────────
@@ -175,7 +173,9 @@ function Game:draw()
     love.graphics.setBlendMode("alpha")
     love.graphics.setShader()
 
-    -- ── Screen-space overlays (not post-processed) ────────────────────────
+    -- ── HUD and overlays drawn directly to screen (bypass shader) ─────────
+    self.hud:draw(self.player, self._killCount)
+
     if self.showDebug then
         self.player:drawDebug()
         self:_drawCameraDebug()
