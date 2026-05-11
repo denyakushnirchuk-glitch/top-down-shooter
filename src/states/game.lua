@@ -1,31 +1,30 @@
 -- src/states/game.lua
 -- Main gameplay state.
 
-local Player    = require("src.entities.player")
-local BulletPool= require("src.systems.bulletpool")
-local Battery   = require("src.entities.battery")
-local Drone     = require("src.entities.drone")
-local Collision = require("src.systems.collision")
-local HUD       = require("src.ui.hud")
+local Player      = require("src.entities.player")
+local BulletPool  = require("src.systems.bulletpool")
+local Battery     = require("src.entities.battery")
+local Drone       = require("src.entities.drone")
+local Collision   = require("src.systems.collision")
+local HUD         = require("src.ui.hud")
+local PulsarBG    = require("src.systems.pulsarbackground")
 
 local Game = {}
 Game.__index = Game
 
 -- ─── Constants ───────────────────────────────────────────────────────────────
 
--- Drones spawn on a circle this far from the player so they're
--- always off-screen when they appear (screen is ~640 px half-diagonal).
 local SPAWN_RADIUS = 750
 
 -- ─── State lifecycle ─────────────────────────────────────────────────────────
 
 function Game:enter()
-    self.player   = Player:new(0, 0)
-    self.bullets  = BulletPool:new()
-    self.hud      = HUD:new()
+    self.player    = Player:new(0, 0)
+    self.bullets   = BulletPool:new()
+    self.hud       = HUD:new()
     self.batteries = {}
     self.drones    = {}
-    self.particles = {}   -- death burst shards, outlive their drone
+    self.particles = {}
 
     self.player.onFire = function(x, y, angle)
         self.bullets:fire(x, y, angle)
@@ -42,15 +41,31 @@ function Game:enter()
         {-400,  120}, { 320,  280}, {-150, -320 },
     }
 
-    -- Drone spawner — aggressive from the start, escalates over time
-    self._droneTimer    = 2        -- first drone after 2 s
-    self._droneInterval = {1.8, 3.2}  -- 2–3 s between spawns (much faster)
-    self._droneMax      = 16          -- higher cap so waves feel dense
-    self._killCount     = 0           -- total drones destroyed this run
+    -- Drone spawner
+    self._droneTimer    = 2
+    self._droneInterval = {1.8, 3.2}
+    self._droneMax      = 16
+    self._killCount     = 0
+
+    -- Death sequence
+    self._deathTimer = 0
+
+    -- Background and post-processing
+    self._bgTime   = 0
+    self._pulsarBG = PulsarBG.new()
+
+    local W, H = love.graphics.getDimensions()
+    self._canvas = love.graphics.newCanvas(W, H)
+
+    local ok, result = pcall(love.graphics.newShader, "src/systems/screen_shader.glsl")
+    self._screenShader = ok and result or nil
+    if not ok then
+        print("[Game] Screen shader failed: " .. tostring(result))
+    end
 
     Camera:snap(self.player.x, self.player.y)
     love.mouse.setVisible(false)
-    self.showDebug = true
+    self.showDebug = false
 end
 
 function Game:exit()
@@ -60,6 +75,21 @@ end
 -- ─── Update ──────────────────────────────────────────────────────────────────
 
 function Game:update(dt)
+    self._bgTime = self._bgTime + dt
+    self._pulsarBG:update(dt)
+
+    -- ── Death sequence ────────────────────────────────────────────────────
+    if not self.player.alive then
+        self._deathTimer = self._deathTimer + dt
+        self:_updateParticles(dt)
+        Camera:follow(self.player, dt)
+        if self._deathTimer > 1.6 then
+            LastGameResult = { kills = self._killCount }
+            States:switch(require("src.states.gameover"))
+        end
+        return
+    end
+
     self.player:update(dt)
     self.bullets:update(dt)
     self.hud:update(dt, self.player)
@@ -83,10 +113,8 @@ function Game:update(dt)
         if not bat.active then table.remove(self.batteries, i) end
     end
 
-    -- Collision: bullets vs drones, drones vs player
     Collision.check(self.bullets, self.drones, self.player)
 
-    -- Sweep dead drones; migrate their particles to the game particle list
     for i = #self.drones, 1, -1 do
         local d = self.drones[i]
         if not d.active then
@@ -104,6 +132,13 @@ end
 -- ─── Draw ────────────────────────────────────────────────────────────────────
 
 function Game:draw()
+    -- ── Render world + HUD into the offscreen canvas ──────────────────────
+    love.graphics.setCanvas(self._canvas)
+    love.graphics.clear(0, 0, 0, 1)
+
+    -- Pulsar star background (screen-space with subtle camera parallax)
+    self._pulsarBG:draw(Camera.x * 0.018, Camera.y * 0.018)
+
     Camera:attach()
 
         self:_drawGrid()
@@ -111,7 +146,6 @@ function Game:draw()
         for _, bat in ipairs(self.batteries) do bat:draw() end
         for _, d   in ipairs(self.drones)    do d:draw()   end
 
-        -- Particles drawn in world space with additive blend
         for _, p in ipairs(self.particles) do
             Drone.drawParticle(p)
         end
@@ -129,6 +163,19 @@ function Game:draw()
 
     self.hud:draw(self.player, self._killCount)
 
+    love.graphics.setCanvas()
+
+    -- ── Blit canvas through the screen shader ─────────────────────────────
+    if self._screenShader then
+        love.graphics.setShader(self._screenShader)
+    end
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.setBlendMode("alpha", "premultiplied")
+    love.graphics.draw(self._canvas)
+    love.graphics.setBlendMode("alpha")
+    love.graphics.setShader()
+
+    -- ── Screen-space overlays (not post-processed) ────────────────────────
     if self.showDebug then
         self.player:drawDebug()
         self:_drawCameraDebug()
@@ -141,7 +188,11 @@ end
 -- ─── Input ───────────────────────────────────────────────────────────────────
 
 function Game:keypressed(key)
-    if key == "f1" then self.showDebug = not self.showDebug end
+    if key == "f1" then
+        self.showDebug = not self.showDebug
+    elseif key == "escape" then
+        States:switch(require("src.states.menu"))
+    end
 end
 
 -- ─── Spawners ────────────────────────────────────────────────────────────────
@@ -153,8 +204,6 @@ function Game:_updateDroneSpawner(dt)
         self._droneTimer = lo + math.random() * (hi - lo)
 
         if #self.drones < self._droneMax then
-            -- Spawn on a circle around the player at SPAWN_RADIUS distance,
-            -- at a random angle so drones arrive from all directions over time
             local angle = math.random() * math.pi * 2
             local sx = self.player.x + math.cos(angle) * SPAWN_RADIUS
             local sy = self.player.y + math.sin(angle) * SPAWN_RADIUS
@@ -218,16 +267,18 @@ end
 -- ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function Game:_drawGrid()
+    -- Subtle blue grid helps the player judge speed and orientation.
     local CELL   = 64
     local EXTENT = 2000
-    love.graphics.setColor(0.15, 0.15, 0.15, 1)
+    love.graphics.setColor(0.08, 0.13, 0.28, 0.22)
     for gx = -EXTENT, EXTENT, CELL do
         love.graphics.line(gx, -EXTENT, gx, EXTENT)
     end
     for gy = -EXTENT, EXTENT, CELL do
         love.graphics.line(-EXTENT, gy, EXTENT, gy)
     end
-    love.graphics.setColor(0.4, 0.4, 0.4, 1)
+    -- Slightly brighter axes
+    love.graphics.setColor(0.12, 0.22, 0.48, 0.38)
     love.graphics.line(-EXTENT, 0, EXTENT, 0)
     love.graphics.line(0, -EXTENT, 0, EXTENT)
 end
@@ -236,15 +287,14 @@ function Game:_drawCrosshair()
     local mx, my = Input:mousePosition()
     local GAP = 5; local ARM = 10
     love.graphics.setColor(1, 1, 1, 0.9)
-    love.graphics.line(mx-GAP-ARM, my, mx-GAP, my)
+    love.graphics.line(mx-GAP-ARM, my, mx-GAP,     my)
     love.graphics.line(mx+GAP,     my, mx+GAP+ARM, my)
-    love.graphics.line(mx, my-GAP-ARM, mx, my-GAP)
+    love.graphics.line(mx, my-GAP-ARM, mx, my-GAP    )
     love.graphics.line(mx, my+GAP,     mx, my+GAP+ARM)
     love.graphics.circle("fill", mx, my, 2)
 end
 
 function Game:_drawCameraDebug()
-    -- Sits below the 6 player debug lines (6 * 18 = 108 px) + gap
     love.graphics.setColor(0.6, 0.6, 0.6, 1)
     love.graphics.print(string.format("cam  (%.0f, %.0f)", Camera.x, Camera.y), 10, 130)
 end

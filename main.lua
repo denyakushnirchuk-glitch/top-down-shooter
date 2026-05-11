@@ -4,44 +4,35 @@
 
 -- ─── Global Utilities ────────────────────────────────────────────────────────
 
--- require() uses dots as path separators, not slashes.
--- Everything under src/ is accessible as "src.folder.file"
 Camera  = require("src.systems.camera")
 Input   = require("src.systems.input")
 States  = require("src.systems.statemanager")
 
+-- Shared result bag; game.lua writes kills here before switching to gameover.
+LastGameResult = { kills = 0 }
+
 -- ─── Love2D Callbacks ────────────────────────────────────────────────────────
 
 function love.load()
-    -- Nearest-neighbour filtering keeps pixel art crisp when scaled
     love.graphics.setDefaultFilter("nearest", "nearest")
-
-    -- Seed the random number generator
     math.randomseed(os.time())
-
-    -- Boot into the gameplay state straight away.
-    -- Later you'll swap this for a "menu" state.
-    States:switch(require("src.states.game"))
+    States:switch(require("src.states.menu"))
 end
 
 function love.update(dt)
-    -- Cap dt so a lag spike doesn't teleport entities across the map
     dt = math.min(dt, 0.05)
-
-    Input:update()          -- snapshot keyboard/mouse this frame
-    States:update(dt)       -- forward dt into the active state
+    Input:update()
+    States:update(dt)
 end
 
 function love.draw()
     States:draw()
 end
 
--- ─── Input pass-through callbacks ────────────────────────────────────────────
--- Love2D fires these once per event; we forward them to the active state
--- so states can react to single-press actions (not just held keys).
+-- ─── Input pass-through ───────────────────────────────────────────────────────
+-- ESC is handled per-state: menu/gameover quit; game returns to menu.
 
 function love.keypressed(key, scancode, isrepeat)
-    if key == "escape" then love.event.quit() end
     States:keypressed(key, scancode, isrepeat)
 end
 
