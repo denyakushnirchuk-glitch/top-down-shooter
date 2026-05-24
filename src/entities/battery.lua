@@ -18,14 +18,14 @@ Battery.__index = Battery
 -- Hexagon geometry — precompute the 6 vertex offsets once
 local HEX_VERTS = {}
 for i = 0, 5 do
-    local a = math.pi / 180 * (60 * i - 30)   -- flat-top hex, starting top-right
-    HEX_VERTS[i * 2 + 1] = math.cos(a)        -- X
-    HEX_VERTS[i * 2 + 2] = math.sin(a)        -- Y
+    local a = math.pi / 180 * (60 * i - 30)
+    HEX_VERTS[i * 2 + 1] = math.cos(a)
+    HEX_VERTS[i * 2 + 2] = math.sin(a)
 end
 
-local RADIUS        = 14    -- hex outer radius px
-local COLLECT_DIST  = 28    -- pickup trigger distance (player centre → battery centre)
-local ENERGY_VALUE  = 40    -- energy restored on pickup
+local RADIUS        = 14
+local COLLECT_DIST  = 28
+local ENERGY_VALUE  = 40
 
 -- ─── Constructor ─────────────────────────────────────────────────────────────
 
@@ -35,7 +35,7 @@ function Battery:new(x, y)
     b.x          = x or 0
     b.y          = y or 0
     b.active     = true
-    b.radius     = COLLECT_DIST   -- exposed for collision check in game.lua
+    b.radius     = COLLECT_DIST
     b.energyVal  = ENERGY_VALUE
 
     -- Pulse animation: each battery gets a random phase offset so they don't
@@ -118,7 +118,7 @@ function Battery:draw()
     love.graphics.line(-2,  0,   3,  1)   -- centre to mid-right
     love.graphics.line( 3,  1,  -1,  6)   -- mid-right to bottom-left
 
-    love.graphics.setLineWidth(1)   -- reset line width
+    love.graphics.setLineWidth(1)
     love.graphics.pop()
 end
 

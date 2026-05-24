@@ -38,7 +38,7 @@ function GameOver:enter()
 
     self.blink        = 0
     self.blinkVisible = true
-    self.fadeAlpha    = 1.0      -- fades from black on enter
+    self.fadeAlpha    = 1.0
 
     love.mouse.setVisible(true)
 end

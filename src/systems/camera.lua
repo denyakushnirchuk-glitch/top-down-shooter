@@ -21,8 +21,8 @@ local SH = love.graphics and love.graphics.getHeight() or 720
 -- Camera position is the WORLD point shown at the centre of the screen.
 Camera.x        = 0
 Camera.y        = 0
-Camera.scale    = 1       -- zoom (1 = no zoom)
-Camera.smoothing = 6      -- lerp speed; higher = snappier follow
+Camera.scale    = 1
+Camera.smoothing = 6
 
 -- ─── Core transform ──────────────────────────────────────────────────────────
 

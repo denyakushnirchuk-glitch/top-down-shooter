@@ -22,18 +22,18 @@ Drone.__index = Drone
 
 -- ─── Tuning ──────────────────────────────────────────────────────────────────
 
-local SPEED        = 110      -- px/s cruise speed toward player
-local ACCEL        = 220      -- px/s² acceleration
-local FRICTION     = 3.5      -- exponential drag (lower than player = heavier feel)
-local RADIUS       = 18       -- collision circle radius
-local MAX_HP       = 3        -- shots to kill
-local CONTACT_DMG  = 1        -- damage dealt to player on overlap
-local FLASH_TIME   = 0.08     -- seconds the drone stays white after a hit
+local SPEED        = 110
+local ACCEL        = 220
+local FRICTION     = 3.5
+local RADIUS       = 18
+local MAX_HP       = 3
+local CONTACT_DMG  = 1
+local FLASH_TIME   = 0.08
 
 -- Death burst: N shards fly outward from the death position
 local SHARD_COUNT  = 10
-local SHARD_SPEED  = { 60, 180 }   -- min/max shard speed px/s
-local SHARD_LIFE   = { 0.4, 0.8 }  -- min/max shard lifetime seconds
+local SHARD_SPEED  = { 60, 180 }
+local SHARD_LIFE   = { 0.4, 0.8 }
 
 -- ─── Constructor ─────────────────────────────────────────────────────────────
 
@@ -44,7 +44,7 @@ function Drone:new(x, y)
     d.y      = y or 0
     d.vx     = 0
     d.vy     = 0
-    d.angle  = 0          -- facing (visual only — drone always faces its target)
+    d.angle  = 0
 
     d.hp     = MAX_HP
     d.maxHp  = MAX_HP
@@ -175,10 +175,10 @@ function Drone:draw()
     -- Triangle vertices relative to centre: nose forward (+X), two rear corners
     local r = RADIUS
     local verts = {
-         r,       0,        -- nose  (forward)
-        -r * 0.7, r * 0.6,  -- rear-left
-        -r * 0.4, 0,        -- rear-centre dent (makes it look less like a pizza slice)
-        -r * 0.7,-r * 0.6,  -- rear-right
+         r,       0,
+        -r * 0.7, r * 0.6,
+        -r * 0.4, 0,
+        -r * 0.7,-r * 0.6,
     }
 
     if flashing then
@@ -215,7 +215,7 @@ end
 
 function Drone.drawParticle(p)
     local frac  = p.life / p.maxLife
-    local alpha = frac * frac    -- quadratic fade for a sharper tail-off
+    local alpha = frac * frac
 
     love.graphics.setBlendMode("add")
     love.graphics.setColor(1, 0.35 + frac * 0.3, 0.1, alpha)

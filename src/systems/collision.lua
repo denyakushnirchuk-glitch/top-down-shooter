@@ -47,7 +47,7 @@ function Collision._bulletsVsDrones(bullets, drones)
                         -- Bullet consumed regardless of whether drone dies
                         bullets:destroy(b)
                         drone:hit(1)
-                        break  -- this bullet is gone; stop checking other drones
+                        break
                     end
                 end
             end

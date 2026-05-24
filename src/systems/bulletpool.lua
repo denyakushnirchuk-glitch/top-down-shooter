@@ -15,11 +15,11 @@ BulletPool.__index = BulletPool
 -- ─── Constants ───────────────────────────────────────────────────────────────
 
 local POOL_SIZE  = 128
-local BOLT_SPEED = 900      -- px/s
-local BOLT_LIFE  = 1.8      -- seconds
-local BOLT_W     = 32       -- bolt length (along travel axis), px
-local BOLT_H     = 8        -- bolt width  (cross-section), px
-local BOLT_R     = 3        -- collision radius for later
+local BOLT_SPEED = 900
+local BOLT_LIFE  = 1.8
+local BOLT_W     = 32
+local BOLT_H     = 8
+local BOLT_R     = 3
 
 -- ─── Constructor ─────────────────────────────────────────────────────────────
 
@@ -71,7 +71,7 @@ function BulletPool:new()
     -- texture and applies the glow shape via UV math, ignoring the actual
     -- pixel colour of the source (it's just geometry to the shader).
     love.graphics.setCanvas(bp._canvas)
-    love.graphics.clear(1, 1, 1, 1)    -- solid white fill
+    love.graphics.clear(1, 1, 1, 1)
     love.graphics.setCanvas()
 
     return bp
@@ -130,11 +130,11 @@ function BulletPool:draw()
             -- The shader runs per-pixel of this canvas as it lands on screen.
             love.graphics.draw(
                 self._canvas,
-                b.x, b.y,      -- world position (camera transform already applied)
-                b.angle,        -- rotate so the bolt points along its velocity
-                1, 1,           -- scale
-                self._ox,       -- origin x (centre of canvas)
-                self._oy        -- origin y (centre of canvas)
+                b.x, b.y,
+                b.angle,
+                1, 1,
+                self._ox,
+                self._oy
             )
         end
     end

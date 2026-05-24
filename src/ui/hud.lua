@@ -25,11 +25,11 @@ local BOTTOM_PAD = 18     -- distance from screen bottom to bar bottom edge
 
 -- Derived positions (computed once; bars are centred around screen midpoint)
 local TOTAL_W    = BAR_W * 2 + BAR_GAP
-local LEFT_X     = (SW - TOTAL_W) / 2          -- left bar X
-local RIGHT_X    = LEFT_X + BAR_W + BAR_GAP    -- right bar X
-local BAR_Y      = SH - BOTTOM_PAD - BAR_H     -- both bars share same Y
-local LABEL_Y    = BAR_Y - 15                  -- label row above bars
-local KILL_Y     = LABEL_Y - 20               -- kill counter above labels
+local LEFT_X     = (SW - TOTAL_W) / 2
+local RIGHT_X    = LEFT_X + BAR_W + BAR_GAP
+local BAR_Y      = SH - BOTTOM_PAD - BAR_H
+local LABEL_Y    = BAR_Y - 15
+local KILL_Y     = LABEL_Y - 20
 
 -- ─── Colours ─────────────────────────────────────────────────────────────────
 

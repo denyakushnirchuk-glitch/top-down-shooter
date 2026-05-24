@@ -30,18 +30,18 @@ function Player:new(x, y)
     p.vy = 0
 
     -- ── Movement tuning ───────────────────────────────────────────────────
-    p.maxSpeed    = 300     -- top speed px/s
-    p.accel       = 600     -- acceleration force (maxSpeed / 0.5 s)
-    p.friction    = 6.0     -- exponential drag; v *= exp(-friction*dt)
-    p.driftFactor = 0.45    -- lateral thrust authority (0=tank, 1=free strafe)
+    p.maxSpeed    = 300
+    p.accel       = 600
+    p.friction    = 6.0
+    p.driftFactor = 0.45
 
     -- Facing angle in radians (0 = right)
     p.angle = 0
 
     -- ── Weapon ────────────────────────────────────────────────────────────
-    p.fireRate     = 10          -- shots per second
-    p.fireInterval = 1 / 10     -- seconds between shots
-    p.fireCooldown = 0           -- counts down; fires when <= 0
+    p.fireRate     = 10
+    p.fireInterval = 1 / 10
+    p.fireCooldown = 0
 
     -- Muzzle sits at the tip of the forward indicator bar (20 px + a little gap)
     p.muzzleOffset = 24
@@ -56,15 +56,15 @@ function Player:new(x, y)
     p.energy        = 100
     p.maxEnergy     = 100
     p.energyPerShot = 4
-    p.regenRate     = 3.5       -- units/second (~4x faster than before)
+    p.regenRate     = 3.5
     p.regenDelay    = 1.2
     p._regenTimer   = 0
 
     -- ── Low-energy speed penalty ──────────────────────────────────────────
     -- Kicks in below 25% energy (was 10%) so it's clearly felt during play.
     -- At 0 energy speed drops to 40% of max (was 35%).
-    p.lowEnergyThreshold = 0.25  -- penalty starts below 25%
-    p.lowSpeedMult       = 0.40  -- floor: 300 * 0.40 = 120 px/s at empty
+    p.lowEnergyThreshold = 0.25
+    p.lowSpeedMult       = 0.40
 
     -- ── Hitbox ────────────────────────────────────────────────────────────
     p.w     = 32
@@ -79,9 +79,9 @@ function Player:new(x, y)
     p.maxHp     = 5
     p.alive     = true
 
-    p._iframeTimer    = 0     -- counts down; damage blocked while > 0
-    p._iframeDuration = 1.2   -- seconds of invincibility after each hit
-    p._hitFlash       = 0     -- brief white flash when hit (visual only)
+    p._iframeTimer    = 0
+    p._iframeDuration = 1.2
+    p._hitFlash       = 0
 
     return p
 end
@@ -233,7 +233,7 @@ function Player:draw()
     -- gets clear visual feedback that they're temporarily invincible.
     local inIframes = self._iframeTimer > 0
     if inIframes and (math.floor(self._iframeTimer / 0.1) % 2 == 0) then
-        return   -- skip draw on alternating frames = flicker
+        return
     end
 
     local flashing = self._hitFlash > 0
@@ -278,7 +278,7 @@ function Player:drawDebug()
         string.format("energy %.0f / %.0f  (%.0f%%)", self.energy, self.maxEnergy, energyFrac * 100),
         string.format("hp     %d / %d  iframes: %.2f s", self.hp, self.maxHp, math.max(0, self._iframeTimer)),
     }
-    local lh = 18   -- line height px
+    local lh = 18
     love.graphics.setColor(1, 1, 0, 1)
     for i, line in ipairs(lines) do
         love.graphics.print(line, 10, 10 + (i - 1) * lh)
